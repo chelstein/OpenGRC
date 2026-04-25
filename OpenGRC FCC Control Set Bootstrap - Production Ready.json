@@ -1,0 +1,486 @@
+{
+  "name": "OpenGRC FCC Control Set Bootstrap - Production Ready",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        1024
+      ],
+      "id": "d7cc3a41-e845-425b-935b-4a0b09451980",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    base_url: \"http://138.197.167.237\",\n    api_token: \"3|vln7XSv3QEYNJXxq7jfsLHGUICreFG6RtzF5E6Og86fe40dd\",\n\n    // ✅ FIXED (code + title REQUIRED)\n    standard: {\n      code: \"FCC-ZTR\",\n      title: \"FCC-Aligned Broadcast Service Integrity Standard\",\n      description: \"A Zero Trust Radio control standard aligned to FCC broadcast obligations, including public interest service, EAS reliability, signal integrity, interference monitoring, public accountability, and independent RF verification.\"\n    },\n\n    // ✅ FIXED (code + title REQUIRED)\n    program: {\n      code: \"FCC-ZTR-PROGRAM\",\n      title: \"FCC-Aligned Broadcast Service Integrity & Public Interest Verification Program\",\n      description: \"Program for independently verifying broadcast service integrity using SDR capture, RF observability, MISP evidence, and FCC-aligned control monitoring.\"\n    },\n\n    controls: [\n      {\n        code: \"FCC-ZTR-001\",\n        name: \"Public Interest, Convenience, and Necessity Verification\",\n        reference: \"Communications Act of 1934; FCC Public and Broadcasting Manual\",\n        description: \"Each broadcast service shall demonstrate the ability to deliver intelligible and accessible programming to its licensed community in fulfillment of its obligation to operate in the public interest, convenience, and necessity.\",\n        implementation: \"Signal availability, intelligibility, and consistency are measured using geographically distributed SDR nodes. Observations are recorded and compared against expected coverage and service levels.\",\n        evidence: \"RF capture artifacts, signal strength measurements, intelligibility scoring, and geographic coverage comparisons.\"\n      },\n      {\n        code: \"FCC-ZTR-002\",\n        name: \"Broadcast Signal Integrity and Technical Compliance\",\n        reference: \"47 CFR Part 73\",\n        description: \"Broadcast transmissions shall maintain technical integrity, including stable carrier operation, acceptable modulation characteristics, and freedom from harmful interference.\",\n        implementation: \"Scheduled SDR captures evaluate signal strength, noise floor, distortion, and temporal stability.\",\n        evidence: \"Signal measurements, dBFS levels, SNR, distortion logs, anomaly flags, and trend data.\"\n      },\n      {\n        code: \"FCC-ZTR-003\",\n        name: \"Harmful Interference Detection and Mitigation Monitoring\",\n        reference: \"47 CFR Part 73; FCC interference and blanketing principles\",\n        description: \"Licensees shall avoid causing harmful interference and shall address interference conditions affecting reception within their service area.\",\n        implementation: \"Multi-node SDR comparison identifies anomalous signal behavior and localized interference patterns.\",\n        evidence: \"Cross-node comparisons, interference records, RF hotspot analysis.\"\n      },\n      {\n        code: \"FCC-ZTR-004\",\n        name: \"Emergency Alert System Propagation Verification\",\n        reference: \"47 CFR Part 11\",\n        description: \"Emergency alert messages shall be reliably transmitted and accessible to the public within the station service area.\",\n        implementation: \"IPAWS/EAS alerts trigger automated SDR captures across relevant geographic nodes.\",\n        evidence: \"Captured alert audio, timing logs, intelligibility scoring, multi-node verification.\"\n      },\n      {\n        code: \"FCC-ZTR-005\",\n        name: \"Independent Broadcast Signal Verification\",\n        reference: \"47 CFR §73.1350 Control of Transmitters\",\n        description: \"Broadcast transmission performance shall be independently verifiable outside of station-owned monitoring systems.\",\n        implementation: \"Third-party SDR nodes validate signal presence, quality, and consistency.\",\n        evidence: \"External SDR capture logs and independent signal verification reports.\"\n      },\n      {\n        code: \"FCC-ZTR-006\",\n        name: \"Broadcast Performance Evidence and Public Accountability\",\n        reference: \"FCC public inspection file and public accountability obligations\",\n        description: \"Broadcast operations shall be documented to support transparency, accountability, and public evaluation.\",\n        implementation: \"RF captures, anomalies, and validation events are retained for analysis and audit.\",\n        evidence: \"MISP events, capture artifacts, anomaly records, verification logs.\"\n      },\n      {\n        code: \"FCC-ZTR-007\",\n        name: \"Anomalous RF Behavior Identification\",\n        reference: \"FCC interference and operational integrity principles\",\n        description: \"Unexpected RF behavior shall be identified and evaluated for impact on service quality and public access.\",\n        implementation: \"Signal scoring models evaluate deviations in strength, clarity, and consistency.\",\n        evidence: \"Anomaly classifications, scoring outputs, comparative datasets, confidence values.\"\n      }\n    ]\n  }\n}];"
+      },
+      "id": "750cb93a-f39c-4597-bc62-dda8906e5d1f",
+      "name": "Set OpenGRC Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$('Set OpenGRC Config').first().json.base_url}}/api/standards",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Set OpenGRC Config').first().json.api_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$('Set OpenGRC Config').first().json.standard}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b3f4ae74-c59d-40d9-b1c7-82abacf2febe",
+      "name": "Create Standard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        96,
+        1120
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $json;\nconst body = resp?.body ?? resp;\n\nconst statusCode = resp?.statusCode ?? body?.statusCode ?? null;\nconst ok = statusCode === null || (statusCode >= 200 && statusCode < 300);\n\nconst standardId =\n  body?.data?.id ??\n  body?.id ??\n  body?.standard?.id ??\n  null;\n\nreturn [{\n  json: {\n    standard_id: standardId,\n    standard_ok: !!standardId && ok,\n    http_ok: ok,\n    status_code: statusCode,\n    standard_response: resp\n  }\n}];"
+      },
+      "id": "d9fa6a5b-363b-422a-891c-979c47cc0976",
+      "name": "Normalize Standard Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$('Set OpenGRC Config').first().json.base_url}}/api/programs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Set OpenGRC Config').first().json.api_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$('Set OpenGRC Config').first().json.program}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "9733bcfc-a41a-454d-8fd5-2bc2597bc932",
+      "name": "Create Program",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        1120
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $json;\nconst body = resp?.body ?? resp;\n\nconst statusCode = resp?.statusCode ?? body?.statusCode ?? null;\nconst ok = statusCode === null || (statusCode >= 200 && statusCode < 300);\n\nconst programId =\n  body?.data?.id ??\n  body?.id ??\n  body?.program?.id ??\n  null;\n\nreturn [{\n  json: {\n    program_id: programId,\n    program_ok: !!programId && ok,\n    http_ok: ok,\n    status_code: statusCode,\n    program_response: resp\n  }\n}];"
+      },
+      "id": "31e5bc14-2c6b-41b0-9cc7-c4b2bdeee88e",
+      "name": "Normalize Program Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const standardId = $('Normalize Standard Result').first().json.standard_id;\nconst programId = $('Normalize Program Result').first().json.program_id;\nconst controls = $('Set OpenGRC Config').first().json.controls;\n\nreturn controls.map((c, index) => ({\n  json: {\n    sequence: index + 1,\n    code: c.code,\n    name: c.name,\n    standard_id: standardId,\n    program_id: programId,\n\n    control_payload: {\n      code: c.code,\n      identifier: c.code,\n      standard_id: standardId,\n      enforcement: \"mandatory\",\n      type: \"preventive\",\n      category: \"operational\",\n      title: c.name,\n      description: c.description,\n      discussion: c.reference,\n      test_plan: c.evidence,\n      status: \"active\"\n    },\n\n    implementation_template: {\n      code: `${c.code}-IMPL`,\n      identifier: `${c.code}-IMPL`,\n      title: `Implementation - ${c.code} - ${c.name}`,\n      description: `${c.implementation}\\n\\nRequired evidence: ${c.evidence}`,\n      status: \"implemented\"\n    }\n  }\n}));"
+      },
+      "id": "4957820d-2ffd-49f2-9835-926ac413bc50",
+      "name": "Prepare Controls",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$('Set OpenGRC Config').first().json.base_url}}/api/controls",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Set OpenGRC Config').first().json.api_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.control_payload}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "85a2c465-5a1a-444c-b490-32e07d267b71",
+      "name": "Create Control",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        1120
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $item(0).$node[\"Prepare Controls\"].json;\nconst controlResp = $json;\nconst body = controlResp?.body ?? controlResp;\n\nconst statusCode = controlResp?.statusCode ?? body?.statusCode ?? null;\nconst httpOk = statusCode === null || (statusCode >= 200 && statusCode < 300);\n\nconst controlId =\n  body?.data?.id ??\n  body?.id ??\n  body?.control?.id ??\n  null;\n\nif (!httpOk || !controlId) {\n  return [{\n    json: {\n      skipped: true,\n      control_created: false,\n      reason: !httpOk ? \"control create HTTP failure\" : \"control creation response missing id\",\n      code: prepared.code,\n      control_name: prepared.name,\n      status_code: statusCode,\n      control_response: controlResp\n    }\n  }];\n}\n\nconst payload = {\n  ...prepared.implementation_template,\n  control_id: controlId\n};\n\nif (prepared.standard_id) payload.standard_id = prepared.standard_id;\nif (prepared.program_id) payload.program_id = prepared.program_id;\n\nreturn [{\n  json: {\n    skipped: false,\n    control_created: true,\n    code: prepared.code,\n    control_name: prepared.name,\n    control_id: controlId,\n    implementation_payload: payload\n  }\n}];"
+      },
+      "id": "9bbc16b4-4103-4f78-bcdb-ae41155314e4",
+      "name": "Build Implementation Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7200da1d-c1c5-4a03-8ee6-0d147c2b8f60",
+              "leftValue": "={{$json.skipped}}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "190056ab-acda-4bcc-a1a3-38df839e544a",
+      "name": "Only If Not Skipped",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1776,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$('Set OpenGRC Config').first().json.base_url}}/api/implementations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Set OpenGRC Config').first().json.api_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.implementation_payload}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b648fd5b-34bd-459c-8c88-1032909387c7",
+      "name": "Create Implementation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2032,
+        992
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $json;\nconst body = resp?.body ?? resp;\n\nconst statusCode = resp?.statusCode ?? body?.statusCode ?? null;\nconst httpOk = statusCode === null || (statusCode >= 200 && statusCode < 300);\n\nconst implementationId =\n  body?.data?.id ??\n  body?.id ??\n  body?.implementation?.id ??\n  null;\n\nreturn [{\n  json: {\n    skipped: false,\n    implementation_created: !!implementationId && httpOk,\n    implementation_id: implementationId,\n    http_ok: httpOk,\n    status_code: statusCode,\n    implementation_response: resp\n  }\n}];"
+      },
+      "id": "1a977faf-a38e-4b9c-9383-f2e7c00688e6",
+      "name": "Normalize Implementation Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        992
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7db6459d-c031-4285-8907-95c7ccefa78e",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2560,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst skipped = items.filter(i => i.json.skipped === true);\nconst created = items.filter(i => i.json.implementation_created === true);\nconst failedImplementation = items.filter(i =>\n  i.json.skipped !== true &&\n  i.json.implementation_created === false\n);\n\nreturn [{\n  json: {\n    workflow: \"OpenGRC FCC Control Set Bootstrap - Production Ready\",\n    created_at: new Date().toISOString(),\n    total_items: items.length,\n    implementations_created: created.length,\n    skipped_controls: skipped.length,\n    failed_implementation_creates: failedImplementation.length,\n    details: items.map((item, i) => ({\n      index: i + 1,\n      skipped: item.json.skipped ?? false,\n      control_created: item.json.control_created ?? null,\n      implementation_created: item.json.implementation_created ?? null,\n      implementation_id: item.json.implementation_id ?? null,\n      reason: item.json.reason ?? null,\n      status_code: item.json.status_code ?? null,\n      code: item.json.code ?? null,\n      control_name: item.json.control_name ?? null,\n      response: item.json\n    })),\n    note: \"Production-ready path: skipped controls and implementation results are merged before summary. Replace the token placeholder before running.\"\n  }\n}];"
+      },
+      "id": "5105c569-1655-483e-8c3d-625172594f84",
+      "name": "Summarize Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2832,
+        1120
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set OpenGRC Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set OpenGRC Config": {
+      "main": [
+        [
+          {
+            "node": "Create Standard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Standard": {
+      "main": [
+        [
+          {
+            "node": "Normalize Standard Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Standard Result": {
+      "main": [
+        [
+          {
+            "node": "Create Program",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Program": {
+      "main": [
+        [
+          {
+            "node": "Normalize Program Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Program Result": {
+      "main": [
+        [
+          {
+            "node": "Prepare Controls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Controls": {
+      "main": [
+        [
+          {
+            "node": "Create Control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Control": {
+      "main": [
+        [
+          {
+            "node": "Build Implementation Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Implementation Payload": {
+      "main": [
+        [
+          {
+            "node": "Only If Not Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only If Not Skipped": {
+      "main": [
+        [
+          {
+            "node": "Create Implementation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Implementation": {
+      "main": [
+        [
+          {
+            "node": "Normalize Implementation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Implementation Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Summarize Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4c577279-e6d2-4caa-8e77-7a92988d3f4e",
+  "meta": {
+    "instanceId": "ce90156f4873b68bfa557948e5d264d8b7d826d73f7942c2ffb5f038046e79c8"
+  },
+  "id": "2rBWxV5R2EU8BRvG",
+  "tags": []
+}
